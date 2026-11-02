@@ -47,11 +47,14 @@ During the build, the built interface was compared with `design/index.html` in W
 
 ## Windows and Linux
 
-Nothing has been run on these yet.
+The release workflow builds these and runs the automated tests on them. Nobody has opened the app on them yet.
 
-- [ ] The `Build for PC` GitHub workflow passes
-- [ ] The `.exe` and `.msi` install on a clean PC, and WebView2 downloads if it is missing
+- [ ] The release `.exe` and `.msi` install on a clean PC, and WebView2 downloads if it is missing
 - [ ] All the checks above, using `Ctrl`
 - [ ] `Ctrl+C` and `Ctrl+V` work in text fields
 - [ ] The drop highlight works
 - [ ] On Linux, the `.deb` and `.AppImage` run
+
+## macOS downloads
+
+- [ ] The release `.dmg` opens on another Mac after using **Open Anyway**, on both Apple Silicon and Intel

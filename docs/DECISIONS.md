@@ -7,6 +7,9 @@ Choices made during the build that the design did not specify.
 - **Built in this folder, by hand.** The docs describe unattended build scripts that create `fpv-shifter-app`. The app was built directly in `Deinon` instead, following the same phases and checks. "Deinon" is only the folder name. The product is still `FPV Shifter`.
 - **Bundle identifier.** `com.fpvshifter.app` is what the design asks for. Tauri warns that ending in `.app` is not recommended on macOS. Change it before the first public release if you want the warning gone, because changing it later resets saved settings.
 - **Publisher.** `FPV Shifter` is a placeholder.
+- **Releases.** The original plan built only Windows installers and published nothing. On request, `.github/workflows/release.yml` replaces that workflow. It builds macOS (Apple Silicon and Intel), Windows and Linux, and publishes a release only after all of them pass.
+- **Ad-hoc signing on macOS.** The app is signed with no developer identity (`signingIdentity: "-"`). macOS reports an unsigned download on Apple Silicon as damaged, which is hard to get past. With an ad-hoc signature, it shows the normal warning and **Open Anyway** works. This is not a replacement for a Developer ID and notarization.
+- **Screenshots** in `docs/images/` were taken from the built interface in WebKit, using the computer-generated sample photo.
 
 ## Security
 
