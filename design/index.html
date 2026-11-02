@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPV Shifter</title>
+<link rel="stylesheet" href="design.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="shell-header">
+    <span class="shell-header__prefix">FPV</span><span>Shifter</span>
+    <div class="shell-header__actions">
+      <button type="button" class="icon-btn tip-end" id="openBtn" aria-label="Open photo" data-tip="Open photo"><span class="icon">folder_open</span></button>
+      <button type="button" class="icon-btn tip-end" id="goExportBtn" aria-label="Go to export" data-tip="Go to export" hidden><span class="icon">download</span></button>
+      <button type="button" class="icon-btn tip-end" id="themeBtn" aria-label="Switch theme" data-tip="Switch theme"><span class="icon" id="themeIcon">light_mode</span></button>
+    </div>
+  </header>
+  <input type="file" id="fileInput" accept="image/*" aria-label="Open photo" hidden>
+
+  <!-- Start screen -->
+  <main class="start" id="startView">
+    <div class="start__inner">
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone__quad" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="dropzone__copy">
+          <h1>Open a photo to shift its view</h1>
+          <p>Drop a JPEG, PNG, TIFF or WebP here, or choose one from your computer.</p>
+          <div class="dropzone__actions">
+            <button type="button" class="btn btn--filled" id="startOpenBtn">Open photo</button>
+            <button type="button" class="btn btn--outlined" id="sampleBtn">Use the sample photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step__head"><span class="icon">location_on</span><h2 class="title-section">1. Place 4 points</h2></div>
+          <p>Pin them to straight features in the photo: a tile, a window, a door frame.</p>
+        </div>
+        <div class="step">
+          <div class="step__head"><span class="icon">open_with</span><h2 class="title-section">2. Shift the view</h2></div>
+          <p>Drag a point, or turn the virtual camera, and the photo follows live.</p>
+        </div>
+        <div class="step">
+          <div class="step__head"><span class="icon">download</span><h2 class="title-section">3. Export</h2></div>
+          <p>Pick a format and size, then choose how to handle any empty areas.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Editor -->
+  <div class="workspace" id="editorView" hidden>
+    <main class="editor">
+
+      <div class="toolbar" role="toolbar" aria-label="Editor tools">
+        <div class="seg" role="group" aria-label="Tool">
+          <button type="button" class="seg__btn" data-tool="place"><span class="icon">check</span>Place points</button>
+          <button type="button" class="seg__btn" data-tool="shift"><span class="icon">check</span>Shift view</button>
+        </div>
+        <div class="toolbar__sep" aria-hidden="true"></div>
+        <button type="button" class="icon-btn" id="undoBtn" aria-label="Undo" data-tip="Undo"><span class="icon">undo</span></button>
+        <button type="button" class="icon-btn" id="redoBtn" aria-label="Redo" data-tip="Redo"><span class="icon">redo</span></button>
+        <button type="button" class="icon-btn" id="resetBtn" aria-label="Reset the shift" data-tip="Reset the shift"><span class="icon">restart_alt</span></button>
+        <div class="toolbar__sep" aria-hidden="true"></div>
+        <button type="button" class="icon-btn" id="compareBtn" aria-label="Compare with original" data-tip="Compare with original"><span class="icon">compare</span></button>
+        <button type="button" class="icon-btn" id="meshBtn" aria-label="Perspective mesh" data-tip="Perspective mesh"><span class="icon">grid_4x4</span></button>
+        <button type="button" class="icon-btn" id="gridBtn" aria-label="Rule of thirds grid" data-tip="Rule of thirds grid"><span class="icon">grid_3x3</span></button>
+        <div class="toolbar__spring"></div>
+        <button type="button" class="icon-btn" id="zoomOutBtn" aria-label="Zoom out" data-tip="Zoom out"><span class="icon">zoom_out</span></button>
+        <span class="toolbar__zoom" id="zoomLabel" aria-live="polite"></span>
+        <button type="button" class="icon-btn" id="zoomInBtn" aria-label="Zoom in" data-tip="Zoom in"><span class="icon">zoom_in</span></button>
+        <button type="button" class="icon-btn tip-end" id="zoomFitBtn" aria-label="Fit to window" data-tip="Fit to window"><span class="icon">fit_screen</span></button>
+      </div>
+
+      <div class="stage" id="stage" role="group" aria-label="Photo stage">
+        <div class="stage__layer frame-checker" id="checker" aria-hidden="true"></div>
+        <img class="stage__layer photo" id="photo" alt="" draggable="false">
+        <div class="stage__layer frame-mask" id="mask" aria-hidden="true"></div>
+        <span class="stage__layer frame-label" id="frameLabel" aria-hidden="true">Output frame</span>
+
+        <div class="stage__layer compare-photo" id="comparePhoto" aria-hidden="true" hidden><img id="compareImg" alt="" draggable="false"></div>
+
+        <svg class="stage__layer overlay" aria-hidden="true">
+          <path class="overlay__grid" id="gridPath"></path>
+          <path class="overlay__mesh-under" id="meshUnder"></path>
+          <path class="overlay__mesh" id="meshPath"></path>
+          <path class="overlay__ghost" id="ghostPath"></path>
+          <path class="overlay__edge-under" id="edgeUnder"></path>
+          <path class="overlay__edge" id="edgePath"></path>
+        </svg>
+
+        <div class="stage__layer quad-grab" id="quadGrab" aria-hidden="true"></div>
+        <div id="ghosts" aria-hidden="true"></div>
+        <div id="points"></div>
+
+        <button type="button" class="divider-grip" id="divider" aria-label="Move the compare divider" hidden>
+          <span class="divider-grip__line" aria-hidden="true"></span>
+          <span class="divider-grip__knob" aria-hidden="true"><span class="icon">arrow_range</span></span>
+        </button>
+        <span class="tag tag--primary compare-tag" id="tagShifted" hidden>Shifted</span>
+        <span class="tag tag--neutral compare-tag" id="tagOriginal" hidden>Original</span>
+
+        <div class="loupe" id="loupe" aria-hidden="true" hidden>
+          <div class="loupe__view">
+            <img id="loupeImg" alt="" draggable="false">
+            <div class="loupe__cross-v"></div>
+            <div class="loupe__cross-h"></div>
+          </div>
+          <div class="loupe__label" id="loupeLabel"></div>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="status__file" id="statusFile"></span>
+        <span id="statusSize"></span>
+        <span class="status__hint" id="statusHint" aria-live="polite"></span>
+        <span class="tag" id="statusTag"><span class="icon" id="statusIcon"></span><span id="statusLabel"></span></span>
+      </div>
+    </main>
+
+    <aside class="panel" aria-label="Shift settings">
+      <div class="tabs" role="tablist" aria-label="Panel">
+        <button type="button" class="tab" role="tab" id="tabShift" aria-controls="panelShift">Shift</button>
+        <button type="button" class="tab" role="tab" id="tabExport" aria-controls="panelExport">Export</button>
+      </div>
+
+      <div id="panelShift" role="tabpanel" aria-labelledby="tabShift">
+        <section class="panel__section">
+          <div class="panel__heading">
+            <h2 class="title-section">Points</h2>
+            <span class="caption" id="pointsCaption"></span>
+          </div>
+          <div class="point-cards" id="cards"></div>
+        </section>
+
+        <section class="panel__section">
+          <h2 class="title-section">Virtual camera</h2>
+          <div class="slider">
+            <label class="field__label" for="camYaw">Yaw (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camYaw" data-cam="yaw" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camYaw"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camPitch">Pitch (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camPitch" data-cam="pitch" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camPitch"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camRoll">Roll (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camRoll" data-cam="roll" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camRoll"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camFov">Field of view (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camFov" data-cam="fov" type="range" min="40" max="120" step="1"><output class="slider__value" for="camFov"></output></div>
+          </div>
+        </section>
+
+        <section class="panel__section">
+          <h2 class="title-section">Presets</h2>
+          <div class="chips">
+            <button type="button" class="chip" data-preset='{}'><span class="icon">center_focus_strong</span>Straight on</button>
+            <button type="button" class="chip" data-preset='{"pitch":16}'><span class="icon">arrow_upward</span>Look up</button>
+            <button type="button" class="chip" data-preset='{"pitch":-16}'><span class="icon">arrow_downward</span>Look down</button>
+            <button type="button" class="chip" data-preset='{"yaw":-20}'><span class="icon">arrow_back</span>Look left</button>
+            <button type="button" class="chip" data-preset='{"yaw":20}'><span class="icon">arrow_forward</span>Look right</button>
+            <button type="button" class="chip" data-preset='{"roll":10}'><span class="icon">rotate_right</span>Dutch tilt</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="panelExport" role="tabpanel" aria-labelledby="tabExport" hidden>
+        <section class="panel__section panel__section--roomy">
+          <h2 class="title-section">Export settings</h2>
+          <div class="field">
+            <label class="field__label" for="exportName">File name</label>
+            <input class="field__input" id="exportName" type="text">
+            <span class="caption" id="exportExt"></span>
+          </div>
+          <div class="field">
+            <span class="field__label">Format</span>
+            <div class="seg" role="group" aria-label="Format">
+              <button type="button" class="seg__btn" data-format="jpeg"><span class="icon">check</span>JPEG</button>
+              <button type="button" class="seg__btn" data-format="png"><span class="icon">check</span>PNG</button>
+              <button type="button" class="seg__btn" data-format="tiff"><span class="icon">check</span>TIFF</button>
+              <button type="button" class="seg__btn" data-format="webp"><span class="icon">check</span>WebP</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label" for="exportSize">Size</label>
+            <select class="field__input" id="exportSize">
+              <option value="original">Original size</option>
+              <option value="3840">3840 px long edge</option>
+              <option value="2560">2560 px long edge</option>
+              <option value="1920">1920 px long edge</option>
+              <option value="1280">1280 px long edge</option>
+            </select>
+          </div>
+          <div class="slider" id="qualityRow">
+            <label class="field__label" for="exportQuality">Quality (%)</label>
+            <div class="slider__row"><input class="slider__input" id="exportQuality" type="range" min="40" max="100" step="1"><output class="slider__value" for="exportQuality"></output></div>
+          </div>
+          <fieldset class="radio-group">
+            <legend class="caption">Empty areas in the frame</legend>
+            <label class="radio"><input type="radio" name="empty" value="crop">Crop to the photo</label>
+            <label class="radio"><input type="radio" name="empty" value="stretch">Stretch the edges</label>
+            <label class="radio"><input type="radio" name="empty" value="clear">Keep transparent</label>
+            <span class="caption" id="emptyNote"></span>
+          </fieldset>
+          <dl class="summary" style="margin: 0">
+            <dt>Output</dt><dd id="summaryOutput"></dd>
+            <dt>Gaps in frame</dt><dd id="summaryGaps"></dd>
+          </dl>
+          <div><button type="button" class="btn btn--filled" id="exportBtn">Export photo<span class="icon">download</span></button></div>
+          <div class="notice" id="exportNotice" role="status" hidden>
+            <span class="icon">check_circle</span>
+            <div><div class="title-section">Export complete</div><div id="exportMessage"></div></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const rad = (d) => (d * Math.PI) / 180;
+const deg = (r) => (r * 180) / Math.PI;
+const r2 = (n) => Math.round(n * 100) / 100;
+
+/* ---------- Homography: 4 source points to 4 destination points ---------- */
+
+function squareToQuad([p0, p1, p2, p3]) {
+  const dx1 = p1.x - p2.x, dx2 = p3.x - p2.x, sx = p0.x - p1.x + p2.x - p3.x;
+  const dy1 = p1.y - p2.y, dy2 = p3.y - p2.y, sy = p0.y - p1.y + p2.y - p3.y;
+  const den = dx1 * dy2 - dx2 * dy1;
+  const g = (sx * dy2 - dx2 * sy) / den, h = (dx1 * sy - sx * dy1) / den;
+  return [p1.x - p0.x + g * p1.x, p3.x - p0.x + h * p3.x, p0.x, p1.y - p0.y + g * p1.y, p3.y - p0.y + h * p3.y, p0.y, g, h, 1];
+}
+function mul(a, b) {
+  const m = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) m.push(a[r * 3] * b[c] + a[r * 3 + 1] * b[c + 3] + a[r * 3 + 2] * b[c + 6]);
+  return m;
+}
+function inv([a, b, c, d, e, f, g, h, i]) {
+  const A = e * i - f * h, B = c * h - b * i, C = b * f - c * e, D = f * g - d * i, E = a * i - c * g, F = c * d - a * f, G = d * h - e * g, H = b * g - a * h, I = a * e - b * d;
+  const det = a * A + b * D + c * G;
+  return [A / det, B / det, C / det, D / det, E / det, F / det, G / det, H / det, I / det];
+}
+function homography(src, dst) {
+  const m = mul(squareToQuad(dst), inv(squareToQuad(src)));
+  return m.map((v) => v / m[8]);
+}
+function project(H, p) {
+  const w = H[6] * p.x + H[7] * p.y + H[8];
+  return { x: (H[0] * p.x + H[1] * p.y + H[2]) / w, y: (H[3] * p.x + H[4] * p.y + H[5]) / w, w };
+}
+const toCssMatrix = (H) => 'matrix3d(' + [H[0], H[3], 0, H[6], H[1], H[4], 0, H[7], 0, 0, 1, 0, H[2], H[5], 0, 1].join(',') + ')';
+const corners = (W, H) => [{ x: 0, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: 0, y: H }];
+
+function convexSign(q) {
+  let sign = 0;
+  for (let i = 0; i < 4; i++) {
+    const a = q[i], b = q[(i + 1) % 4], c = q[(i + 2) % 4];
+    const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (Math.abs(cross) < 1) return 0;
+    const s = Math.sign(cross);
+    if (sign && s !== sign) return 0;
+    sign = s;
+  }
+  return sign;
+}
+function isValid(src, dst, W, H) {
+  const a = convexSign(src), b = convexSign(dst);
+  if (!a || a !== b) return false;
+  const M = homography(src, dst);
+  return corners(W, H).every((c) => project(M, c).w > 0.05);
+}
+/* Share of the output frame the warped photo covers (Sutherland-Hodgman clip) */
+function coverage(poly, W, H) {
+  const clip = (pts, inside, cross) => {
+    const out = [];
+    pts.forEach((a, i) => {
+      const b = pts[(i + 1) % pts.length];
+      if (inside(a)) out.push(a);
+      if (inside(a) !== inside(b)) out.push(cross(a, b));
+    });
+    return out;
+  };
+  const atX = (X) => (a, b) => ({ x: X, y: a.y + ((X - a.x) / (b.x - a.x)) * (b.y - a.y) });
+  const atY = (Y) => (a, b) => ({ x: a.x + ((Y - a.y) / (b.y - a.y)) * (b.x - a.x), y: Y });
+  let p = clip(poly, (a) => a.x >= 0, atX(0));
+  p = clip(p, (a) => a.x <= W, atX(W));
+  p = clip(p, (a) => a.y >= 0, atY(0));
+  p = clip(p, (a) => a.y <= H, atY(H));
+  let area = 0;
+  p.forEach((a, i) => { const b = p[(i + 1) % p.length]; area += a.x * b.y - b.x * a.y; });
+  return Math.abs(area) / 2 / (W * H);
+}
+
+/* ---------- Virtual camera: turning the camera moves all 4 points together ---------- */
+
+const BASE_FOV = 84;
+const flatCam = () => ({ yaw: 0, pitch: 0, roll: 0, fov: BASE_FOV });
+const focal = (W) => W / 2 / Math.tan(rad(BASE_FOV / 2));
+
+function applyCam(pts, from, to, W, H) {
+  const f = focal(W);
+  const yaw = rad(to.yaw - from.yaw), pitch = rad(to.pitch - from.pitch), roll = rad(to.roll - from.roll);
+  const zoom = Math.tan(rad(from.fov / 2)) / Math.tan(rad(to.fov / 2));
+  const cx = W / 2, cy = H / 2;
+  return pts.map((p) => {
+    const x = p.x - cx, y = p.y - cy;
+    const x1 = x * Math.cos(roll) - y * Math.sin(roll), y1 = x * Math.sin(roll) + y * Math.cos(roll);
+    const y2 = y1 * Math.cos(pitch), z2 = -y1 * Math.sin(pitch);
+    const x3 = x1 * Math.cos(yaw) - z2 * Math.sin(yaw), z3 = x1 * Math.sin(yaw) + z2 * Math.cos(yaw);
+    const k = (f / (f + z3)) * zoom;
+    return { x: cx + x3 * k, y: cy + y2 * k };
+  });
+}
+/* Reads camera angles back out of a hand-dragged shape, so the sliders stay in step */
+function estimateCam(M, W, H) {
+  const f = focal(W);
+  const c = corners(W, H).map((p) => project(M, p));
+  const len = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const hL = len(c[3], c[0]), hR = len(c[2], c[1]), wT = len(c[1], c[0]), wB = len(c[2], c[3]);
+  const yaw = deg(Math.asin(clamp(((hL - hR) / (hL + hR)) * ((2 * f) / W), -1, 1)));
+  const pitch = deg(Math.asin(clamp(((wB - wT) / (wB + wT)) * ((2 * f) / H), -1, 1)));
+  const roll = deg((Math.atan2(c[1].y - c[0].y, c[1].x - c[0].x) + Math.atan2(c[2].y - c[3].y, c[2].x - c[3].x)) / 2);
+  let area = 0;
+  c.forEach((a, i) => { const b = c[(i + 1) % 4]; area += a.x * b.y - b.x * a.y; });
+  const fov = 2 * deg(Math.atan(Math.tan(rad(BASE_FOV / 2)) / Math.sqrt(Math.abs(area) / 2 / (W * H))));
+  return { yaw, pitch, roll, fov: clamp(fov, 40, 120) };
+}
+function insetPoints(W, H) {
+  const x0 = W * 0.2, x1 = W * 0.8, y0 = H * 0.2, y1 = H * 0.8;
+  return [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }];
+}
+
+/* ---------- State ---------- */
+
+const S = {
+  view: 'start',
+  photo: '', fileName: '', W: 1600, H: 1067,
+  src: [], dst: [], goodSrc: [], good: [], base: [], camBase: flatCam(), cam: flatCam(),
+  tool: 'shift', tab: 0, selected: 1, invalid: false, dragging: false,
+  compare: false, split: 0.5, mesh: true, grid: false, zoom: 1,
+  stageW: 1060, stageH: 760,
+  past: [], future: [],
+  exportName: '', format: 'jpeg', size: 'original', quality: 90, empty: 'crop', exported: false,
+};
+let geom = { fx: 0, fy: 0, fw: 1, fh: 1, s: 1, sw: 1, sh: 1 };
+let rafRender = null, rafTween = null;
+
+function set(patch) {
+  Object.assign(S, patch);
+  if (!rafRender) rafRender = requestAnimationFrame(() => { rafRender = null; render(); });
+}
+
+function openPhoto(url, name, W, H, cam) {
+  const src = insetPoints(W, H), flat = flatCam();
+  const dst = applyCam(src, flat, cam, W, H);
+  set({
+    view: 'editor', photo: url, fileName: name, W, H, src, dst, goodSrc: src, good: dst, base: src, camBase: flat, cam,
+    invalid: false, zoom: 1, compare: false, tool: 'shift', past: [], future: [], exported: false,
+    exportName: name.replace(/\.[^.]+$/, '') + '_shifted',
+  });
+}
+function loadFile(file) {
+  if (!file || !/^image\//.test(file.type)) return;
+  const url = URL.createObjectURL(file);
+  const im = new Image();
+  im.onload = () => openPhoto(url, file.name, im.naturalWidth, im.naturalHeight, flatCam());
+  im.src = url;
+}
+function loadSample() {
+  const im = new Image();
+  im.onload = () => openPhoto('assets/sample.jpg', 'gallery_sample.jpg', im.naturalWidth, im.naturalHeight, { yaw: 12, pitch: -6, roll: 2, fov: BASE_FOV });
+  im.src = 'assets/sample.jpg';
+}
+
+/* ---------- History ---------- */
+
+const snapshot = () => ({ src: S.src, dst: S.dst, goodSrc: S.goodSrc, good: S.good, base: S.base, camBase: S.camBase, cam: S.cam });
+let lastGroup = null, lastTime = 0;
+function remember(group) {
+  const now = Date.now();
+  if (group && group === lastGroup && now - lastTime < 700) { lastTime = now; return; }
+  lastGroup = group;
+  lastTime = now;
+  set({ past: S.past.slice(-49).concat([snapshot()]), future: [] });
+}
+function undo() {
+  if (!S.past.length) return;
+  cancelTween();
+  set(Object.assign({}, S.past[S.past.length - 1], { invalid: false, past: S.past.slice(0, -1), future: S.future.concat([snapshot()]) }));
+}
+function redo() {
+  if (!S.future.length) return;
+  cancelTween();
+  set(Object.assign({}, S.future[S.future.length - 1], { invalid: false, future: S.future.slice(0, -1), past: S.past.concat([snapshot()]) }));
+}
+
+/* ---------- Edits ---------- */
+
+function shiftTo(dst) {
+  if (isValid(S.src, dst, S.W, S.H)) {
+    const cam = estimateCam(homography(S.src, dst), S.W, S.H);
+    set({ dst, goodSrc: S.src, good: dst, base: dst, camBase: cam, cam, invalid: false });
+  } else {
+    set({ dst, invalid: true });
+  }
+}
+/* Moving an anchor keeps the warp: the new anchor lands where the current warp already puts it */
+function placeTo(src, M) {
+  const dst = src.map((p) => { const q = project(M, p); return { x: q.x, y: q.y }; });
+  if (isValid(src, dst, S.W, S.H)) set({ src, dst, goodSrc: src, good: dst, base: dst, camBase: S.cam, invalid: false });
+  else set({ src, invalid: true });
+}
+function settle() {
+  if (S.invalid) set({ src: S.goodSrc, dst: S.good, invalid: false });
+}
+function setPoint(i, p) {
+  if (S.tool === 'place') {
+    const src = S.src.slice(); src[i] = p;
+    placeTo(src, homography(S.goodSrc, S.good));
+  } else {
+    const dst = S.dst.slice(); dst[i] = p;
+    shiftTo(dst);
+  }
+}
+function setCam(key, value) {
+  remember('cam-' + key);
+  const cam = Object.assign({}, S.cam, { [key]: value });
+  const dst = applyCam(S.base, S.camBase, cam, S.W, S.H);
+  if (isValid(S.src, dst, S.W, S.H)) set({ cam, dst, goodSrc: S.src, good: dst, invalid: false });
+  else set({ cam, dst, invalid: true });
+}
+function cancelTween() {
+  if (rafTween) cancelAnimationFrame(rafTween);
+  rafTween = null;
+}
+function poseTo(cam) {
+  const flat = flatCam();
+  const dst = applyCam(S.src, flat, cam, S.W, S.H);
+  if (!isValid(S.src, dst, S.W, S.H)) return;
+  remember(null);
+  cancelTween();
+  const done = { dst, goodSrc: S.src, good: dst, base: S.src, camBase: flat, cam, invalid: false };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { set(done); return; }
+  const from = S.good, fromCam = S.cam, t0 = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / 240);
+    if (t >= 1) { rafTween = null; set(done); return; }
+    const e = 1 - Math.pow(1 - t, 3);
+    const mid = from.map((p, i) => ({ x: p.x + (dst[i].x - p.x) * e, y: p.y + (dst[i].y - p.y) * e }));
+    const midCam = {};
+    Object.keys(cam).forEach((k) => { midCam[k] = fromCam[k] + (cam[k] - fromCam[k]) * e; });
+    set({ dst: mid, good: mid, cam: midCam, invalid: false });
+    rafTween = requestAnimationFrame(step);
+  };
+  rafTween = requestAnimationFrame(step);
+}
+
+/* ---------- Pointer drags on the stage ---------- */
+
+let drag = null;
+function startDrag(e, kind, idx) {
+  if (e.button) return;
+  cancelTween();
+  const r = $('stage').getBoundingClientRect();
+  drag = { kind, idx, r, x0: e.clientX, y0: e.clientY, src0: S.src, dst0: S.dst, M0: homography(S.goodSrc, S.good), moved: false };
+  window.addEventListener('pointermove', dragMove);
+  window.addEventListener('pointerup', dragEnd);
+  window.addEventListener('pointercancel', dragEnd);
+  set(kind === 'point' ? { dragging: true, selected: idx } : { dragging: false });
+}
+function dragMove(ev) {
+  if (!drag) return;
+  const g = geom, sx = ev.clientX - drag.r.left, sy = ev.clientY - drag.r.top;
+  if (drag.kind === 'split') { set({ split: clamp((sx - g.fx) / g.fw, 0, 1) }); return; }
+  if (!drag.moved) { drag.moved = true; remember(null); }
+  if (drag.kind === 'point') {
+    const p = { x: (clamp(sx, 6, g.sw - 6) - g.fx) / g.s, y: (clamp(sy, 6, g.sh - 6) - g.fy) / g.s };
+    if (S.tool === 'place') { const src = S.src.slice(); src[drag.idx] = p; placeTo(src, drag.M0); }
+    else { const dst = S.dst.slice(); dst[drag.idx] = p; shiftTo(dst); }
+  } else {
+    const dx = (ev.clientX - drag.x0) / g.s, dy = (ev.clientY - drag.y0) / g.s;
+    const off = (q) => q.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+    if (S.tool === 'place') placeTo(off(drag.src0), drag.M0);
+    else shiftTo(off(drag.dst0));
+  }
+}
+function dragEnd() {
+  window.removeEventListener('pointermove', dragMove);
+  window.removeEventListener('pointerup', dragEnd);
+  window.removeEventListener('pointercancel', dragEnd);
+  drag = null;
+  set({ dragging: false });
+  settle();
+}
+
+/* ---------- Build the repeated parts ---------- */
+
+const NAMES = ['Top left', 'Top right', 'Bottom right', 'Bottom left'];
+const activePts = () => (S.tool === 'place' ? S.src : S.dst);
+
+const pointEls = [0, 1, 2, 3].map((i) => {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'point';
+  el.dataset.corner = i;
+  el.innerHTML = '<span class="point__dot" aria-hidden="true"></span><span class="point__tag" aria-hidden="true">' + (i + 1) + '</span>';
+  el.addEventListener('pointerdown', (e) => startDrag(e, 'point', i));
+  el.addEventListener('focus', () => set({ selected: i }));
+  el.addEventListener('keydown', (e) => {
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1, p = activePts()[i];
+    remember('key-' + i);
+    setPoint(i, { x: p.x + dir[0] * step, y: p.y + dir[1] * step });
+  });
+  $('points').appendChild(el);
+  return el;
+});
+
+const ghostEls = [0, 1, 2, 3].map(() => {
+  const el = document.createElement('div');
+  el.className = 'ghost';
+  $('ghosts').appendChild(el);
+  return el;
+});
+
+/* Cards sit in the same arrangement as the corners: 1 2 on top, 4 3 below */
+const cardEls = {};
+[0, 1, 3, 2].forEach((i) => {
+  const card = document.createElement('div');
+  card.className = 'point-card';
+  card.innerHTML =
+    '<div class="point-card__head"><span class="point-card__n" aria-hidden="true">' + (i + 1) + '</span><span>' + NAMES[i] + '</span></div>' +
+    '<div class="point-card__xy">' +
+    '<div class="field field--sm"><label class="field__label" for="p' + i + 'x">X</label><input class="field__input" id="p' + i + 'x" type="text" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="field field--sm"><label class="field__label" for="p' + i + 'y">Y</label><input class="field__input" id="p' + i + 'y" type="text" inputmode="decimal" autocomplete="off"></div>' +
+    '</div>';
+  $('cards').appendChild(card);
+  cardEls[i] = card;
+  ['x', 'y'].forEach((axis) => {
+    const input = card.querySelector('#p' + i + axis);
+    input.addEventListener('focus', () => set({ selected: i }));
+    input.addEventListener('input', () => {
+      const n = Number(input.value);
+      if (input.value.trim() === '' || !Number.isFinite(n)) return;
+      remember('field-' + i + axis);
+      setPoint(i, Object.assign({}, activePts()[i], { [axis]: n }));
+    });
+    input.addEventListener('blur', () => { settle(); render(); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      const step = (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? 1 : -1);
+      const p = activePts()[i];
+      remember('field-' + i + axis);
+      setPoint(i, Object.assign({}, p, { [axis]: p[axis] + step }));
+      input.value = Math.round(activePts()[i][axis]) || 0;
+    });
+  });
+});
+
+/* ---------- Render ---------- */
+
+function place(el, x, y, w, h) {
+  el.style.left = r2(x) + 'px';
+  el.style.top = r2(y) + 'px';
+  if (w != null) el.style.width = r2(w) + 'px';
+  if (h != null) el.style.height = r2(h) + 'px';
+}
+function setPressed(el, on) { el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+
+function render() {
+  const onEditor = S.view === 'editor';
+  $('startView').hidden = onEditor;
+  $('editorView').hidden = !onEditor;
+  $('goExportBtn').hidden = !onEditor;
+  if (!onEditor) return;
+
+  const { W, H } = S, placing = S.tool === 'place';
+  const sw = S.stageW, sh = S.stageH;
+  const margin = window.innerWidth < 880 ? 32 : 64;
+  const fit = Math.max(0.05, Math.min((sw - margin * 2) / W, (sh - margin * 2) / H));
+  const s = fit * S.zoom, fw = W * s, fh = H * s, fx = (sw - fw) / 2, fy = (sh - fh) / 2;
+  geom = { fx, fy, fw, fh, s, sw, sh };
+  const toStage = (p) => ({ x: fx + p.x * s, y: fy + p.y * s });
+  const M = homography(S.goodSrc, S.good);
+  const compare = S.compare && !placing;
+
+  const stage = $('stage');
+  stage.classList.toggle('tool-place', placing);
+  stage.classList.toggle('is-invalid', S.invalid);
+
+  // Toolbar
+  document.querySelectorAll('[data-tool]').forEach((b) => setPressed(b, b.dataset.tool === S.tool));
+  $('undoBtn').disabled = !S.past.length;
+  $('redoBtn').disabled = !S.future.length;
+  $('compareBtn').disabled = placing;
+  setPressed($('compareBtn'), compare);
+  setPressed($('meshBtn'), S.mesh);
+  setPressed($('gridBtn'), S.grid);
+  $('zoomLabel').textContent = Math.round(s * 100) + '%';
+
+  // Photo and frame
+  place($('checker'), fx, fy, fw, fh);
+  const photo = $('photo');
+  if (photo.getAttribute('src') !== S.photo) {
+    photo.setAttribute('src', S.photo);
+    $('compareImg').setAttribute('src', S.photo);
+    $('loupeImg').setAttribute('src', S.photo);
+    photo.alt = 'Photo being shifted: ' + S.fileName;
+  }
+  place(photo, fx, fy, W, H);
+  photo.style.transform = 'scale(' + s + ')' + (placing ? '' : ' ' + toCssMatrix(M));
+  place($('mask'), fx, fy, fw, fh);
+  place($('frameLabel'), fx, fy - 22);
+
+  // Overlays
+  const pts = activePts(), stagePts = pts.map(toStage);
+  const seg = (a, b) => 'M' + r2(a.x) + ' ' + r2(a.y) + 'L' + r2(b.x) + ' ' + r2(b.y);
+  const quad = compare ? '' : 'M' + stagePts.map((p) => r2(p.x) + ' ' + r2(p.y)).join('L') + 'Z';
+  $('edgePath').setAttribute('d', quad);
+  $('edgeUnder').setAttribute('d', quad);
+
+  let mesh = '';
+  if (S.mesh && !S.invalid && !compare) {
+    const Q = squareToQuad(pts);
+    const at = (u, v) => {
+      const w = Q[6] * u + Q[7] * v + 1;
+      return toStage({ x: (Q[0] * u + Q[1] * v + Q[2]) / w, y: (Q[3] * u + Q[4] * v + Q[5]) / w });
+    };
+    for (let i = 1; i < 4; i++) mesh += seg(at(i / 4, 0), at(i / 4, 1)) + seg(at(0, i / 4), at(1, i / 4));
+  }
+  $('meshPath').setAttribute('d', mesh);
+  $('meshUnder').setAttribute('d', mesh);
+
+  let grid = '';
+  if (S.grid) {
+    [1 / 3, 2 / 3].forEach((t) => {
+      grid += seg({ x: fx + fw * t, y: fy }, { x: fx + fw * t, y: fy + fh });
+      grid += seg({ x: fx, y: fy + fh * t }, { x: fx + fw, y: fy + fh * t });
+    });
+  }
+  $('gridPath').setAttribute('d', grid);
+
+  const showGhosts = !placing && !compare;
+  const ghostPts = S.src.map(toStage);
+  $('ghostPath').setAttribute('d', showGhosts ? ghostPts.map((g, i) => seg(g, stagePts[i])).join('') : '');
+  ghostEls.forEach((el, i) => {
+    el.hidden = !showGhosts;
+    place(el, ghostPts[i].x, ghostPts[i].y);
+  });
+
+  // Points and the drag-inside area
+  $('quadGrab').hidden = compare;
+  $('quadGrab').style.clipPath = 'polygon(' + stagePts.map((p) => r2(p.x) + 'px ' + r2(p.y) + 'px').join(',') + ')';
+  pointEls.forEach((el, i) => {
+    el.hidden = compare;
+    place(el, stagePts[i].x, stagePts[i].y);
+    el.classList.toggle('is-selected', S.selected === i);
+    el.classList.toggle('is-dragging', S.dragging && S.selected === i);
+    el.setAttribute('aria-label', 'Point ' + (i + 1) + ', x ' + Math.round(pts[i].x) + ', y ' + Math.round(pts[i].y) + ' pixels');
+  });
+
+  // Compare
+  $('comparePhoto').hidden = !compare;
+  $('divider').hidden = !compare;
+  $('tagShifted').hidden = !compare;
+  $('tagOriginal').hidden = !compare;
+  if (compare) {
+    place($('comparePhoto'), fx, fy, fw, fh);
+    $('comparePhoto').style.clipPath = 'inset(0 0 0 ' + r2(fw * S.split) + 'px)';
+    place($('divider'), fx + fw * S.split, fy, null, fh);
+    place($('tagShifted'), fx + 8, fy + 8);
+    $('tagOriginal').style.top = r2(fy + 8) + 'px';
+    $('tagOriginal').style.right = r2(sw - fx - fw + 8) + 'px';
+  }
+
+  // Loupe
+  const showLoupe = placing && S.dragging;
+  $('loupe').hidden = !showLoupe;
+  if (showLoupe) {
+    const a = stagePts[S.selected], p = pts[S.selected], z = Math.max(2, s * 4);
+    let lx = a.x + 30, ly = a.y - 202;
+    if (lx + 144 > sw - 8) lx = a.x - 174;
+    if (ly < 8) ly = a.y + 30;
+    place($('loupe'), lx, ly);
+    const img = $('loupeImg');
+    img.style.width = W + 'px';
+    img.style.height = H + 'px';
+    img.style.transform = 'translate(' + r2(72 - z * p.x) + 'px,' + r2(72 - z * p.y) + 'px) scale(' + z + ')';
+    $('loupeLabel').textContent = Math.round(p.x) + ', ' + Math.round(p.y) + ' px';
+  }
+
+  // Status bar
+  const gap = Math.max(0, (1 - coverage(corners(W, H).map((c) => project(M, c)), W, H)) * 100);
+  const full = gap < 0.05;
+  let tag;
+  if (S.invalid) tag = ['error', 'error', 'Points crossed'];
+  else if (placing) tag = ['neutral', 'location_on', '4 points placed'];
+  else if (full) tag = ['success', 'check_circle', 'Frame full'];
+  else tag = ['warning', 'warning', 'Gaps ' + gap.toFixed(1) + '%'];
+  $('statusTag').className = 'tag tag--' + tag[0];
+  $('statusIcon').textContent = tag[1];
+  $('statusLabel').textContent = tag[2];
+  $('statusFile').textContent = S.fileName;
+  $('statusSize').textContent = W + ' × ' + H + ' px';
+  $('statusHint').textContent = S.invalid
+    ? 'Move point ' + (S.selected + 1) + ' back so the 4 points stay a four-sided shape, or ease the camera back.'
+    : compare ? 'Drag the divider to compare the shifted view with the original.'
+    : placing ? 'Put each point on a straight feature, like a tile or window corner, and keep them far apart. Arrow keys nudge 1 px, Shift + arrow 10 px.'
+    : 'Drag a point to shift the view, or drag inside the shape to slide it. Arrow keys nudge 1 px, Shift + arrow 10 px.';
+
+  // Panel
+  $('tabShift').setAttribute('aria-selected', S.tab === 0);
+  $('tabExport').setAttribute('aria-selected', S.tab === 1);
+  $('tabShift').tabIndex = S.tab === 0 ? 0 : -1;
+  $('tabExport').tabIndex = S.tab === 1 ? 0 : -1;
+  $('panelShift').hidden = S.tab !== 0;
+  $('panelExport').hidden = S.tab !== 1;
+  $('pointsCaption').textContent = placing ? 'Pixels on the photo' : 'Pixels in the frame';
+
+  [0, 1, 2, 3].forEach((i) => {
+    cardEls[i].classList.toggle('is-selected', S.selected === i);
+    ['x', 'y'].forEach((axis) => {
+      const input = $('p' + i + axis);
+      if (document.activeElement !== input) input.value = Math.round(pts[i][axis]) || 0;
+    });
+  });
+
+  document.querySelectorAll('[data-cam]').forEach((input) => {
+    const v = Math.round(S.cam[input.dataset.cam]) || 0;
+    syncSlider(input, v);
+  });
+
+  // Export panel
+  const ext = { jpeg: '.jpg', png: '.png', tiff: '.tif', webp: '.webp' }[S.format];
+  const k = S.size === 'original' ? 1 : Number(S.size) / Math.max(W, H);
+  const outW = Math.round(W * k), outH = Math.round(H * k), noAlpha = S.format === 'jpeg';
+  if (document.activeElement !== $('exportName')) $('exportName').value = S.exportName;
+  $('exportExt').textContent = ext + ' is added on export';
+  document.querySelectorAll('[data-format]').forEach((b) => setPressed(b, b.dataset.format === S.format));
+  $('exportSize').value = S.size;
+  $('qualityRow').hidden = !(S.format === 'jpeg' || S.format === 'webp');
+  syncSlider($('exportQuality'), S.quality);
+  document.querySelectorAll('input[name="empty"]').forEach((r) => {
+    r.checked = S.empty === r.value;
+    r.disabled = r.value === 'clear' && noAlpha;
+  });
+  $('emptyNote').textContent = noAlpha ? 'Transparency needs PNG, TIFF or WebP.' : '';
+  $('summaryOutput').textContent = outW + ' × ' + outH + ' px';
+  $('summaryGaps').textContent = full ? 'None' : gap.toFixed(1) + '%';
+  $('exportNotice').hidden = !S.exported;
+  $('exportMessage').textContent = 'Saved ' + S.exportName + ext + ' at ' + outW + ' × ' + outH + ' px.';
+}
+
+function syncSlider(input, value) {
+  input.value = value;
+  const min = Number(input.min), max = Number(input.max);
+  input.style.setProperty('--fill', ((value - min) / (max - min)) * 100 + '%');
+  input.closest('.slider__row').querySelector('output').textContent = value;
+}
+
+/* ---------- Wire up controls ---------- */
+
+const pickFile = () => $('fileInput').click();
+$('openBtn').addEventListener('click', pickFile);
+$('startOpenBtn').addEventListener('click', pickFile);
+$('sampleBtn').addEventListener('click', loadSample);
+$('fileInput').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+$('goExportBtn').addEventListener('click', () => set({ tab: 1 }));
+$('themeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  $('themeIcon').textContent = next === 'dark' ? 'light_mode' : 'dark_mode';
+});
+
+[$('stage'), $('dropzone')].forEach((zone) => {
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('stage--drop'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('stage--drop'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('stage--drop');
+    loadFile(e.dataTransfer.files[0]);
+  });
+});
+
+document.querySelectorAll('[data-tool]').forEach((b) => b.addEventListener('click', () => set({ tool: b.dataset.tool, compare: false })));
+$('undoBtn').addEventListener('click', undo);
+$('redoBtn').addEventListener('click', redo);
+$('resetBtn').addEventListener('click', () => poseTo(flatCam()));
+$('compareBtn').addEventListener('click', () => set({ compare: !S.compare }));
+$('meshBtn').addEventListener('click', () => set({ mesh: !S.mesh }));
+$('gridBtn').addEventListener('click', () => set({ grid: !S.grid }));
+$('zoomOutBtn').addEventListener('click', () => set({ zoom: Math.max(0.5, S.zoom - 0.25) }));
+$('zoomInBtn').addEventListener('click', () => set({ zoom: Math.min(4, S.zoom + 0.25) }));
+$('zoomFitBtn').addEventListener('click', () => set({ zoom: 1 }));
+
+$('quadGrab').addEventListener('pointerdown', (e) => startDrag(e, 'quad'));
+$('divider').addEventListener('pointerdown', (e) => startDrag(e, 'split'));
+$('divider').addEventListener('keydown', (e) => {
+  const d = { ArrowLeft: -0.02, ArrowRight: 0.02 }[e.key];
+  if (!d) return;
+  e.preventDefault();
+  set({ split: clamp(S.split + d, 0, 1) });
+});
+
+[$('tabShift'), $('tabExport')].forEach((tab, i, all) => {
+  tab.addEventListener('click', () => set({ tab: i }));
+  tab.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const next = 1 - i;
+    set({ tab: next });
+    all[next].focus();
+  });
+});
+
+document.querySelectorAll('[data-cam]').forEach((input) => {
+  input.addEventListener('input', () => setCam(input.dataset.cam, Number(input.value)));
+});
+document.querySelectorAll('[data-preset]').forEach((chip) => {
+  chip.addEventListener('click', () => poseTo(Object.assign(flatCam(), JSON.parse(chip.dataset.preset))));
+});
+
+$('exportName').addEventListener('input', (e) => set({ exportName: e.target.value, exported: false }));
+document.querySelectorAll('[data-format]').forEach((b) => b.addEventListener('click', () => {
+  const format = b.dataset.format;
+  set({ format, exported: false, empty: format === 'jpeg' && S.empty === 'clear' ? 'crop' : S.empty });
+}));
+$('exportSize').addEventListener('change', (e) => set({ size: e.target.value, exported: false }));
+$('exportQuality').addEventListener('input', (e) => set({ quality: Number(e.target.value), exported: false }));
+document.querySelectorAll('input[name="empty"]').forEach((r) => r.addEventListener('change', () => set({ empty: r.value, exported: false })));
+
+/* Design mock: this only shows the success state. Connect a real renderer here (see system.md). */
+$('exportBtn').addEventListener('click', () => set({ exported: true }));
+
+new ResizeObserver(() => {
+  const st = $('stage');
+  if (st.clientWidth > 0) set({ stageW: st.clientWidth, stageH: st.clientHeight });
+}).observe($('stage'));
+
+if (location.hash === '#sample') loadSample();
+else render();
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPV Shifter</title>
+<script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="shell-header">
+    <span class="shell-header__prefix">FPV</span><span>Shifter</span>
+    <div class="shell-header__actions">
+      <button type="button" class="icon-btn tip-end" id="openBtn" aria-label="Open photo" data-tip="Open photo"><span class="icon">folder_open</span></button>
+      <button type="button" class="icon-btn tip-end" id="goExportBtn" aria-label="Go to export" data-tip="Go to export" hidden><span class="icon">download</span></button>
+      <button type="button" class="icon-btn tip-end" id="themeBtn" aria-label="Switch theme" data-tip="Switch theme"><span class="icon" id="themeIcon">light_mode</span></button>
+    </div>
+  </header>
+
+  <div class="app-layer">
+    <div class="app-loading" id="appLoading" role="status" hidden>
+      <span class="app-loading__bar" aria-hidden="true"></span>
+      <span class="app-loading__text" id="appLoadingText"></span>
+    </div>
+    <div class="app-message" id="appMessage" role="alert" hidden>
+      <span class="icon" aria-hidden="true">error</span>
+      <span class="app-message__text" id="appMessageText"></span>
+      <button type="button" class="icon-btn tip-end" id="appMessageClose" aria-label="Dismiss" data-tip="Dismiss"><span class="icon">close</span></button>
+    </div>
+  </div>
+
+  <!-- Start screen -->
+  <main class="start" id="startView">
+    <div class="start__inner">
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone__quad" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="dropzone__copy">
+          <h1>Open a photo to shift its view</h1>
+          <p>Drop a JPEG, PNG, TIFF or WebP here, or choose one from your computer.</p>
+          <div class="dropzone__actions">
+            <button type="button" class="btn btn--filled" id="startOpenBtn">Open photo</button>
+            <button type="button" class="btn btn--outlined" id="sampleBtn">Use the sample photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step__head"><span class="icon">location_on</span><h2 class="title-section">1. Place 4 points</h2></div>
+          <p>Pin them to straight features in the photo: a tile, a window, a door frame.</p>
+        </div>
+        <div class="step">
+          <div class="step__head"><span class="icon">open_with</span><h2 class="title-section">2. Shift the view</h2></div>
+          <p>Drag a point, or turn the virtual camera, and the photo follows live.</p>
+        </div>
+        <div class="step">
+          <div class="step__head"><span class="icon">download</span><h2 class="title-section">3. Export</h2></div>
+          <p>Pick a format and size, then choose how to handle any empty areas.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Editor -->
+  <div class="workspace" id="editorView" hidden>
+    <main class="editor">
+
+      <div class="toolbar" role="toolbar" aria-label="Editor tools">
+        <div class="seg" role="group" aria-label="Tool">
+          <button type="button" class="seg__btn" data-tool="place"><span class="icon">check</span>Place points</button>
+          <button type="button" class="seg__btn" data-tool="shift"><span class="icon">check</span>Shift view</button>
+        </div>
+        <div class="toolbar__sep" aria-hidden="true"></div>
+        <button type="button" class="icon-btn" id="undoBtn" aria-label="Undo" data-tip="Undo"><span class="icon">undo</span></button>
+        <button type="button" class="icon-btn" id="redoBtn" aria-label="Redo" data-tip="Redo"><span class="icon">redo</span></button>
+        <button type="button" class="icon-btn" id="resetBtn" aria-label="Reset the shift" data-tip="Reset the shift"><span class="icon">restart_alt</span></button>
+        <div class="toolbar__sep" aria-hidden="true"></div>
+        <button type="button" class="icon-btn" id="compareBtn" aria-label="Compare with original" data-tip="Compare with original"><span class="icon">compare</span></button>
+        <button type="button" class="icon-btn" id="meshBtn" aria-label="Perspective mesh" data-tip="Perspective mesh"><span class="icon">grid_4x4</span></button>
+        <button type="button" class="icon-btn" id="gridBtn" aria-label="Rule of thirds grid" data-tip="Rule of thirds grid"><span class="icon">grid_3x3</span></button>
+        <div class="toolbar__spring"></div>
+        <button type="button" class="icon-btn" id="zoomOutBtn" aria-label="Zoom out" data-tip="Zoom out"><span class="icon">zoom_out</span></button>
+        <span class="toolbar__zoom" id="zoomLabel" aria-live="polite"></span>
+        <button type="button" class="icon-btn" id="zoomInBtn" aria-label="Zoom in" data-tip="Zoom in"><span class="icon">zoom_in</span></button>
+        <button type="button" class="icon-btn tip-end" id="zoomFitBtn" aria-label="Fit to window" data-tip="Fit to window"><span class="icon">fit_screen</span></button>
+      </div>
+
+      <div class="stage" id="stage" role="group" aria-label="Photo stage">
+        <div class="stage__layer frame-checker" id="checker" aria-hidden="true"></div>
+        <img class="stage__layer photo" id="photo" alt="" draggable="false">
+        <div class="stage__layer frame-mask" id="mask" aria-hidden="true"></div>
+        <span class="stage__layer frame-label" id="frameLabel" aria-hidden="true">Output frame</span>
+
+        <div class="stage__layer compare-photo" id="comparePhoto" aria-hidden="true" hidden><img id="compareImg" alt="" draggable="false"></div>
+
+        <svg class="stage__layer overlay" aria-hidden="true">
+          <path class="overlay__grid" id="gridPath"></path>
+          <path class="overlay__mesh-under" id="meshUnder"></path>
+          <path class="overlay__mesh" id="meshPath"></path>
+          <path class="overlay__ghost" id="ghostPath"></path>
+          <path class="overlay__edge-under" id="edgeUnder"></path>
+          <path class="overlay__edge" id="edgePath"></path>
+        </svg>
+
+        <div class="stage__layer quad-grab" id="quadGrab" aria-hidden="true"></div>
+        <div id="ghosts" aria-hidden="true"></div>
+        <div id="points"></div>
+
+        <button type="button" class="divider-grip" id="divider" aria-label="Move the compare divider" hidden>
+          <span class="divider-grip__line" aria-hidden="true"></span>
+          <span class="divider-grip__knob" aria-hidden="true"><span class="icon">arrow_range</span></span>
+        </button>
+        <span class="tag tag--primary compare-tag" id="tagShifted" hidden>Shifted</span>
+        <span class="tag tag--neutral compare-tag" id="tagOriginal" hidden>Original</span>
+
+        <div class="loupe" id="loupe" aria-hidden="true" hidden>
+          <div class="loupe__view">
+            <img id="loupeImg" alt="" draggable="false">
+            <div class="loupe__cross-v"></div>
+            <div class="loupe__cross-h"></div>
+          </div>
+          <div class="loupe__label" id="loupeLabel"></div>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="status__file" id="statusFile"></span>
+        <span id="statusSize"></span>
+        <span class="status__hint" id="statusHint" aria-live="polite"></span>
+        <span class="tag" id="statusTag"><span class="icon" id="statusIcon"></span><span id="statusLabel"></span></span>
+      </div>
+    </main>
+
+    <aside class="panel" aria-label="Shift settings">
+      <div class="tabs" role="tablist" aria-label="Panel">
+        <button type="button" class="tab" role="tab" id="tabShift" aria-controls="panelShift">Shift</button>
+        <button type="button" class="tab" role="tab" id="tabExport" aria-controls="panelExport">Export</button>
+      </div>
+
+      <div id="panelShift" role="tabpanel" aria-labelledby="tabShift">
+        <section class="panel__section">
+          <div class="panel__heading">
+            <h2 class="title-section">Points</h2>
+            <span class="caption" id="pointsCaption"></span>
+          </div>
+          <div class="point-cards" id="cards"></div>
+        </section>
+
+        <section class="panel__section">
+          <h2 class="title-section">Virtual camera</h2>
+          <div class="slider">
+            <label class="field__label" for="camYaw">Yaw (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camYaw" data-cam="yaw" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camYaw"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camPitch">Pitch (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camPitch" data-cam="pitch" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camPitch"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camRoll">Roll (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camRoll" data-cam="roll" type="range" min="-45" max="45" step="1"><output class="slider__value" for="camRoll"></output></div>
+          </div>
+          <div class="slider">
+            <label class="field__label" for="camFov">Field of view (°)</label>
+            <div class="slider__row"><input class="slider__input" id="camFov" data-cam="fov" type="range" min="40" max="120" step="1"><output class="slider__value" for="camFov"></output></div>
+          </div>
+        </section>
+
+        <section class="panel__section">
+          <h2 class="title-section">Presets</h2>
+          <div class="chips">
+            <button type="button" class="chip" data-preset='{}'><span class="icon">center_focus_strong</span>Straight on</button>
+            <button type="button" class="chip" data-preset='{"pitch":16}'><span class="icon">arrow_upward</span>Look up</button>
+            <button type="button" class="chip" data-preset='{"pitch":-16}'><span class="icon">arrow_downward</span>Look down</button>
+            <button type="button" class="chip" data-preset='{"yaw":-20}'><span class="icon">arrow_back</span>Look left</button>
+            <button type="button" class="chip" data-preset='{"yaw":20}'><span class="icon">arrow_forward</span>Look right</button>
+            <button type="button" class="chip" data-preset='{"roll":10}'><span class="icon">rotate_right</span>Dutch tilt</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="panelExport" role="tabpanel" aria-labelledby="tabExport" hidden>
+        <section class="panel__section panel__section--roomy">
+          <h2 class="title-section">Export settings</h2>
+          <div class="field">
+            <label class="field__label" for="exportName">File name</label>
+            <input class="field__input" id="exportName" type="text">
+            <span class="caption" id="exportExt"></span>
+          </div>
+          <div class="field">
+            <span class="field__label">Format</span>
+            <div class="seg" role="group" aria-label="Format">
+              <button type="button" class="seg__btn" data-format="jpeg"><span class="icon">check</span>JPEG</button>
+              <button type="button" class="seg__btn" data-format="png"><span class="icon">check</span>PNG</button>
+              <button type="button" class="seg__btn" data-format="tiff"><span class="icon">check</span>TIFF</button>
+              <button type="button" class="seg__btn" data-format="webp"><span class="icon">check</span>WebP</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label" for="exportSize">Size</label>
+            <select class="field__input" id="exportSize">
+              <option value="original">Original size</option>
+              <option value="3840">3840 px long edge</option>
+              <option value="2560">2560 px long edge</option>
+              <option value="1920">1920 px long edge</option>
+              <option value="1280">1280 px long edge</option>
+            </select>
+          </div>
+          <div class="slider" id="qualityRow">
+            <label class="field__label" for="exportQuality">Quality (%)</label>
+            <div class="slider__row"><input class="slider__input" id="exportQuality" type="range" min="40" max="100" step="1"><output class="slider__value" for="exportQuality"></output></div>
+          </div>
+          <fieldset class="radio-group">
+            <legend class="caption">Empty areas in the frame</legend>
+            <label class="radio"><input type="radio" name="empty" value="crop">Crop to the photo</label>
+            <label class="radio"><input type="radio" name="empty" value="stretch">Stretch the edges</label>
+            <label class="radio"><input type="radio" name="empty" value="clear">Keep transparent</label>
+            <span class="caption" id="emptyNote"></span>
+          </fieldset>
+          <dl class="summary">
+            <dt>Output</dt><dd id="summaryOutput"></dd>
+            <dt>Gaps in frame</dt><dd id="summaryGaps"></dd>
+          </dl>
+          <div><button type="button" class="btn btn--filled" id="exportBtn">Export photo<span class="icon">download</span></button></div>
+          <div class="export-progress" id="exportProgress" hidden>
+            <div class="export-progress__row">
+              <span class="caption" id="exportProgressLabel"></span>
+              <button type="button" class="btn btn--outlined" id="exportCancelBtn">Cancel export</button>
+            </div>
+            <div class="export-progress__track" role="progressbar" id="exportProgressBar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100"><span id="exportProgressFill"></span></div>
+          </div>
+          <div class="notice notice--error" id="exportError" role="alert" hidden>
+            <span class="icon" aria-hidden="true">error</span>
+            <div><div class="title-section">Export failed</div><div id="exportErrorMessage"></div></div>
+          </div>
+          <div class="notice" id="exportNotice" role="status" hidden>
+            <span class="icon">check_circle</span>
+            <div><div class="title-section">Export complete</div><div id="exportMessage"></div></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+</body>
+</html>

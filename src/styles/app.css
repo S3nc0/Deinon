@@ -1,0 +1,39 @@
+/* Desktop additions the design has no style for. The design stylesheet itself stays as it is. */
+
+/* Was an inline style in the reference, which the content security policy does not allow. */
+.summary { margin: 0; }
+
+/* No text selection outside fields, like a native app. */
+body { user-select: none; -webkit-user-select: none; }
+input, select, textarea { user-select: text; -webkit-user-select: text; }
+
+/* Sits over the content below the header, so showing it does not move the stage. */
+.app-layer { position: fixed; z-index: 30; top: var(--size-lg); left: 0; right: 0; pointer-events: none; }
+.app-layer > * { pointer-events: auto; }
+
+.app-loading { position: relative; display: flex; align-items: center; padding: var(--space-2) var(--space-4); background: var(--layer-01); border-bottom: 1px solid var(--border-subtle); }
+.app-loading__text { font-size: 12px; line-height: 16px; letter-spacing: 0.32px; color: var(--on-surface-variant); }
+.app-loading__bar { position: absolute; left: 0; top: 0; width: 30%; height: 2px; background: var(--primary); animation: app-loading 1200ms var(--ease-productive) infinite alternate; }
+@keyframes app-loading { from { left: 0; } to { left: 70%; } }
+
+.app-message {
+  display: flex; align-items: center; gap: var(--space-2); padding: 0 0 0 var(--space-4); min-height: var(--size-md);
+  background: var(--error-container); color: var(--on-error-container);
+  box-shadow: inset 3px 0 0 var(--error);
+}
+.app-message__text { flex: 1 1 auto; min-width: 0; padding: var(--space-2) 0; }
+.app-message .icon-btn { color: inherit; }
+
+.notice--error { background: var(--error-container); color: var(--on-error-container); box-shadow: inset 3px 0 0 var(--error); }
+.notice > div { min-width: 0; overflow-wrap: anywhere; }
+
+.export-progress { display: flex; flex-direction: column; gap: var(--space-2); }
+.export-progress__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.export-progress__track { height: 2px; background: var(--outline); }
+.export-progress__track span { display: block; height: 100%; width: 0; background: var(--primary); transition: width var(--fast) var(--ease-productive); }
+
+.btn:disabled { cursor: not-allowed; background: color-mix(in srgb, var(--on-surface) var(--disabled-container), transparent); color: color-mix(in srgb, var(--on-surface) var(--disabled-content), transparent); box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading__bar { animation: none; width: 100%; }
+}
