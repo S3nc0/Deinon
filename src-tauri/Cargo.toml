@@ -3,6 +3,7 @@ name = "deinon"
 version = "0.2.0"
 description = "Desktop photo editor that shifts a photo's first-person viewpoint using 4 points."
 authors = ["Deinon"]
+license = "MIT"
 edition = "2021"
 
 [lib]

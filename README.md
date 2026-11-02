@@ -17,6 +17,7 @@ It runs on macOS, Windows and Linux, and works fully offline. Your photos stay o
 - [Build it yourself](#build-it-yourself)
 - [Publish a release](#publish-a-release)
 - [How it is built](#how-it-is-built)
+- [Licence](#licence)
 
 ## Features
 
@@ -236,3 +237,7 @@ The preview is a CSS transform, so it stays live as you drag. Export is a separa
 | `docs/TEST-BY-HAND.md` | What automated tests cannot confirm |
 
 Run `npm run fixtures` to regenerate the shared test data from `design/index.html`.
+
+## Licence
+
+Deinon is released under the [MIT licence](LICENSE). The bundled fonts keep their own licences: IBM Plex under the SIL Open Font License, and Material Symbols under Apache 2.0.

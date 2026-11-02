@@ -1,6 +1,7 @@
 {
   "name": "deinon",
   "private": true,
+  "license": "MIT",
   "version": "0.2.0",
   "description": "Desktop photo editor that shifts a photo's first-person viewpoint using 4 points.",
   "type": "module",
