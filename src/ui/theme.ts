@@ -1,6 +1,6 @@
 import { $ } from "./dom.ts";
 
-const KEY = "fpv-shifter-theme";
+const KEY = "deinon-theme";
 
 type Theme = "dark" | "light";
 

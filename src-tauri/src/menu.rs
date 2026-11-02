@@ -106,7 +106,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<(Menu<Wry>, MenuHandles)> {
     // macOS turns the first menu into the app menu, whatever it is called.
     #[cfg(target_os = "macos")]
     {
-        let app_menu = SubmenuBuilder::new(app, "FPV Shifter")
+        let app_menu = SubmenuBuilder::new(app, "Deinon")
             .item(&PredefinedMenuItem::about(app, None, None)?)
             .separator()
             .item(&PredefinedMenuItem::services(app, None)?)

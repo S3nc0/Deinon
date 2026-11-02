@@ -530,7 +530,7 @@ pub fn export_to_path(
     let rendered = render(photo, src, dst, options, cancel, progress)?;
 
     let mut builder = tempfile::Builder::new();
-    builder.prefix(".fpv-shifter-").suffix(".tmp");
+    builder.prefix(".deinon-").suffix(".tmp");
     // A temporary file is private by default. The finished photo should have normal permissions.
     #[cfg(unix)]
     {

@@ -1,4 +1,4 @@
-# FPV Shifter
+# Deinon
 
 A desktop photo editor that changes a photo's first-person viewpoint using 4 points. Pin the points to the photo, move them, and the whole photo warps to follow. Then export the result at full resolution.
 
@@ -36,17 +36,17 @@ Download the latest version from the [releases page](../../releases/latest).
 
 | System | File |
 | --- | --- |
-| macOS, Apple Silicon (M1 or later) | `FPV-Shifter_<version>_aarch64.dmg` |
-| macOS, Intel | `FPV-Shifter_<version>_x64.dmg` |
-| Windows | `FPV-Shifter_<version>_x64-setup.exe`, or the `.msi` |
-| Linux, Debian or Ubuntu | `FPV-Shifter_<version>_amd64.deb` |
-| Linux, other | `FPV-Shifter_<version>_amd64.AppImage` |
+| macOS, Apple Silicon (M1 or later) | `Deinon_<version>_aarch64.dmg` |
+| macOS, Intel | `Deinon_<version>_x64.dmg` |
+| Windows | `Deinon_<version>_x64-setup.exe`, or the `.msi` |
+| Linux, Debian or Ubuntu | `Deinon_<version>_amd64.deb` |
+| Linux, other | `Deinon_<version>_amd64.AppImage` |
 
 The builds are not code-signed, so your system warns you the first time. Each release also includes `SHA256SUMS.txt`, so you can check your download.
 
 ### macOS
 
-1. Open the `.dmg` and drag **FPV Shifter** to **Applications**.
+1. Open the `.dmg` and drag **Deinon** to **Applications**.
 2. Open the app. macOS says it can't verify the developer, so click **Done**.
 3. Go to **System Settings > Privacy & Security**, scroll down, and click **Open Anyway**.
 
@@ -59,14 +59,14 @@ Run the installer. If SmartScreen warns you, click **More info**, then **Run any
 On Debian or Ubuntu:
 
 ```bash
-sudo apt install ./FPV-Shifter_<version>_amd64.deb
+sudo apt install ./Deinon_<version>_amd64.deb
 ```
 
 Or use the AppImage:
 
 ```bash
-chmod +x FPV-Shifter_<version>_amd64.AppImage
-./FPV-Shifter_<version>_amd64.AppImage
+chmod +x Deinon_<version>_amd64.AppImage
+./Deinon_<version>_amd64.AppImage
 ```
 
 ## How to use it
@@ -210,8 +210,8 @@ On macOS, the `.dmg` step asks Finder to arrange the window, so macOS may ask fo
 3. Push a matching tag:
 
    ```bash
-   git tag v0.2.0
-   git push origin v0.2.0
+   git tag v0.3.0
+   git push origin v0.3.0
    ```
 
 GitHub then builds all the installers and runs the tests on each system. The release is only published if every build passes, and the build stops if the tag doesn't match the version in `tauri.conf.json`.

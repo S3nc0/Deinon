@@ -4,9 +4,10 @@ Choices made during the build that the design did not specify.
 
 ## Build
 
-- **Built in this folder, by hand.** The docs describe unattended build scripts that create `fpv-shifter-app`. The app was built directly in `Deinon` instead, following the same phases and checks. "Deinon" is only the folder name. The product is still `FPV Shifter`.
-- **Bundle identifier.** `com.fpvshifter.app` is what the design asks for. Tauri warns that ending in `.app` is not recommended on macOS. Change it before the first public release if you want the warning gone, because changing it later resets saved settings.
-- **Publisher.** `FPV Shifter` is a placeholder.
+- **Built by hand.** The original docs describe unattended build scripts. The app was built directly instead, following the same phases and checks.
+- **Name.** The app began as FPV Shifter, and versions up to 0.1.1 were released under that name. It is now Deinon, with the icon in `src-tauri/icons/source.svg`.
+- **Bundle identifier.** `io.github.s3nc0.deinon`, based on the GitHub account so that it is unique. It replaced `com.fpvshifter.app`, so settings from 0.1.1 and earlier do not carry over and the new app installs alongside the old one. Avoid changing it again, for the same reason.
+- **Publisher.** `Deinon` is a placeholder.
 - **Releases.** The original plan built only Windows installers and published nothing. On request, `.github/workflows/release.yml` replaces that workflow. It builds macOS (Apple Silicon and Intel), Windows and Linux, and publishes a release only after all of them pass.
 - **Ad-hoc signing on macOS.** The app is signed with no developer identity (`signingIdentity: "-"`). macOS reports an unsigned download on Apple Silicon as damaged, which is hard to get past. With an ad-hoc signature, it shows the normal warning and **Open Anyway** works. This is not a replacement for a Developer ID and notarization.
 - **Windows manifest.** `src-tauri/build.rs` embeds the app manifest through the linker instead of using Tauri's default, which only reaches the app. Without this, Rust test programs can't start on Windows (`STATUS_ENTRYPOINT_NOT_FOUND`).
@@ -71,5 +72,5 @@ EXIF is copied as it was, with the orientation cleared because the pixels are al
 
 - **16-bit photos** export at 8 bits, as above.
 - **Quit from the Dock** on macOS may skip the unexported work prompt. The menu, `Cmd+Q` and the close button all ask.
-- **Quitting during an export** can leave a hidden `.fpv-shifter-*.tmp` file in the target folder, if it happens during encoding.
+- **Quitting during an export** can leave a hidden `.deinon-*.tmp` file in the target folder, if it happens during encoding.
 - **Very large previews.** The preview is drawn at the original's CSS size, as the design asks. Behaviour with the largest photos should be checked by hand.

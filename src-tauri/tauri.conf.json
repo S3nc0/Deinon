@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "FPV Shifter",
-  "version": "0.1.1",
-  "identifier": "com.fpvshifter.app",
+  "productName": "Deinon",
+  "version": "0.2.0",
+  "identifier": "io.github.s3nc0.deinon",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "FPV Shifter",
+        "title": "Deinon",
         "width": 1440,
         "height": 900,
         "minWidth": 1024,
@@ -35,11 +35,11 @@
       "deb",
       "appimage"
     ],
-    "publisher": "FPV Shifter",
+    "publisher": "Deinon",
     "category": "Photography",
     "copyright": "",
     "shortDescription": "Shift a photo's first-person viewpoint using 4 points.",
-    "longDescription": "FPV Shifter is a desktop photo editor. Pin 4 points to a photo, move them, and the whole photo warps to follow. Export the result at full resolution.",
+    "longDescription": "Deinon is a desktop photo editor. Pin 4 points to a photo, move them, and the whole photo warps to follow. Export the result at full resolution.",
     "windows": {
       "webviewInstallMode": {
         "type": "downloadBootstrapper"

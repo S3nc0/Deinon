@@ -1,6 +1,6 @@
-# FPV Shifter: GUI design
+# Deinon: GUI design
 
-FPV Shifter changes a photo's first-person viewpoint using 4 points. You pin the points to the photo, then move them, and the whole photo warps to follow. This file covers what the GUI does and how it behaves. For tokens, component specs and the maths, see [system.md](system.md).
+Deinon changes a photo's first-person viewpoint using 4 points. You pin the points to the photo, then move them, and the whole photo warps to follow. This file covers what the GUI does and how it behaves. For tokens, component specs and the maths, see [system.md](system.md).
 
 Working reference: [index.html](index.html) with [design.css](design.css). Open `index.html` directly in a browser, no server needed.
 
@@ -26,7 +26,7 @@ The 4 anchor and target pairs fully define one perspective warp. Anything else t
 
 ```
 +------------------------------------------------------------------+
-| FPV Shifter                        [open] [export] [theme]       |  48 px header
+| Deinon                             [open] [export] [theme]       |  48 px header
 +-----------------------------------------------+------------------+
 | [Place points | Shift view]  undo redo reset  | [Shift | Export] |  Tool bar / tabs
 | compare mesh grid              zoom - 58% + fit+------------------+

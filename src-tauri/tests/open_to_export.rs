@@ -2,9 +2,9 @@
 
 use std::sync::atomic::AtomicBool;
 
-use fpv_shifter_lib::export::{export_to_path, EmptyAreas, ExportOptions, Format};
-use fpv_shifter_lib::photo;
-use fpv_shifter_lib::warp::{homography, project, Point, Quad};
+use deinon_lib::export::{export_to_path, EmptyAreas, ExportOptions, Format};
+use deinon_lib::photo;
+use deinon_lib::warp::{homography, project, Point, Quad};
 use image::{ImageReader, Rgb, RgbImage};
 
 fn quad(points: [(f64, f64); 4]) -> Quad {

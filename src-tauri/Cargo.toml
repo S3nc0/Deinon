@@ -1,12 +1,12 @@
 [package]
-name = "fpv-shifter"
-version = "0.1.1"
+name = "deinon"
+version = "0.2.0"
 description = "Desktop photo editor that shifts a photo's first-person viewpoint using 4 points."
-authors = ["FPV Shifter"]
+authors = ["Deinon"]
 edition = "2021"
 
 [lib]
-name = "fpv_shifter_lib"
+name = "deinon_lib"
 crate-type = ["rlib"]
 
 [build-dependencies]

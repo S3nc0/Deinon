@@ -14,7 +14,7 @@ export function syncDesktop() {
   const placing = S.tool === "place";
   const fieldUndo = editing && textFieldFocused();
   const ui: api.UiState = {
-    title: editing ? S.fileName + " - FPV Shifter" : "FPV Shifter",
+    title: editing ? S.fileName + " - Deinon" : "Deinon",
     dirty: isDirty(),
     photoOpen: editing,
     canUndo: fieldUndo || (editing && S.past.length > 0),

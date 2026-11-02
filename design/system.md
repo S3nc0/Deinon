@@ -1,4 +1,4 @@
-# FPV Shifter: design system and shift engine
+# Deinon: design system and shift engine
 
 This file is the reference for building the GUI: tokens, components, stage layers and the maths behind the warp. For what the product does and why, see [design.md](design.md).
 

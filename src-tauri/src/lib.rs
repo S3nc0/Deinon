@@ -34,5 +34,5 @@ pub fn run() {
             commands::set_ui_state,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running FPV Shifter");
+        .expect("error while running Deinon");
 }
