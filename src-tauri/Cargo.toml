@@ -1,13 +1,13 @@
 [package]
 name = "fpv-shifter"
-version = "0.1.0"
+version = "0.1.1"
 description = "Desktop photo editor that shifts a photo's first-person viewpoint using 4 points."
 authors = ["FPV Shifter"]
 edition = "2021"
 
 [lib]
 name = "fpv_shifter_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

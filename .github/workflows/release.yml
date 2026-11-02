@@ -66,6 +66,7 @@ jobs:
         with:
           workspaces: src-tauri
           key: ${{ matrix.target }}
+          cache-on-failure: true
 
       - name: Install Linux libraries
         if: runner.os == 'Linux'

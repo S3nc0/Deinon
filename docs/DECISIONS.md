@@ -9,6 +9,7 @@ Choices made during the build that the design did not specify.
 - **Publisher.** `FPV Shifter` is a placeholder.
 - **Releases.** The original plan built only Windows installers and published nothing. On request, `.github/workflows/release.yml` replaces that workflow. It builds macOS (Apple Silicon and Intel), Windows and Linux, and publishes a release only after all of them pass.
 - **Ad-hoc signing on macOS.** The app is signed with no developer identity (`signingIdentity: "-"`). macOS reports an unsigned download on Apple Silicon as damaged, which is hard to get past. With an ad-hoc signature, it shows the normal warning and **Open Anyway** works. This is not a replacement for a Developer ID and notarization.
+- **Windows manifest.** `src-tauri/build.rs` embeds the app manifest through the linker instead of using Tauri's default, which only reaches the app. Without this, Rust test programs can't start on Windows (`STATUS_ENTRYPOINT_NOT_FOUND`).
 - **Screenshots** in `docs/images/` were taken from the built interface in WebKit, using the computer-generated sample photo.
 
 ## Security

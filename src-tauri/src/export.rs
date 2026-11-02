@@ -1,6 +1,5 @@
 //! The real export: warps the full-resolution original into the output frame and writes a file.
 
-use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -537,9 +536,9 @@ pub fn export_to_path(
     {
         use std::os::unix::fs::PermissionsExt;
         builder.permissions(
-            fs::metadata(&target)
+            std::fs::metadata(&target)
                 .map(|m| m.permissions())
-                .unwrap_or_else(|_| fs::Permissions::from_mode(0o644)),
+                .unwrap_or_else(|_| std::fs::Permissions::from_mode(0o644)),
         );
     }
     let temp = builder.tempfile_in(parent).map_err(map_write)?;
@@ -572,6 +571,7 @@ mod tests {
     use super::*;
     use crate::warp::{corners, project};
     use image::{ImageDecoder, ImageFormat, ImageReader, Rgba, RgbaImage};
+    use std::fs;
     use std::io::Cursor;
 
     static NEVER: AtomicBool = AtomicBool::new(false);
